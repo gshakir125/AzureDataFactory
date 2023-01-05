@@ -1,0 +1,62 @@
+{
+	"name": "Copy from SQL to Data Lake",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_shd",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "dbo.emp"
+					},
+					{
+						"name": "Destination",
+						"value": "adfcontainer/Destination/employee.csv"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": false,
+					"validateDataConsistency": false
+				},
+				"inputs": [
+					{
+						"referenceName": "Az_SQL_Database_dbo_emp",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "az_ADLS_Employee",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
