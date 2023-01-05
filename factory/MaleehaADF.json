@@ -1,0 +1,9 @@
+{
+	"name": "MaleehaADF",
+	"location": "centralus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "61291646-a958-4c52-b014-2877209e1789",
+		"tenantId": "4f20b841-60a7-44f8-9a21-361ab96e7864"
+	}
+}
