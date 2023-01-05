@@ -1,0 +1,27 @@
+{
+	"name": "Employee_Input",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Az_ADLS_maleeha",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "inputEmp_tq.txt",
+				"folderPath": "Source",
+				"fileSystem": "adfcontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			}
+		]
+	}
+}
