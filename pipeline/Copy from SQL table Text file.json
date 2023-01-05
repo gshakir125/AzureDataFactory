@@ -1,9 +1,9 @@
 {
-	"name": "Employee Text file to SQL table",
+	"name": "Copy from SQL table Text file",
 	"properties": {
 		"activities": [
 			{
-				"name": "Employee Text file to SQL table",
+				"name": "Copy from SQL table Text file",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
