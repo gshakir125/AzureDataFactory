@@ -144,7 +144,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Copy from SQL to Data Lake')]",
+			"name": "[concat(parameters('factoryName'), '/Copy from CSV to SQL_Emp')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
