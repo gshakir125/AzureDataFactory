@@ -452,6 +452,105 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Employee_Input')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Execute Parameterized SQL SP')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata of Employee Text file",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Employee_Input",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"lastModified",
+								"itemName"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "sp_InsertLastModifiedDate",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata of Employee Text file",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_InsertLastModifiedDate]",
+							"storedProcedureParameters": {
+								"FileName": {
+									"value": {
+										"value": "@activity('Get Metadata of Employee Text file').output.itemName",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"LastModifiedDate": {
+									"value": {
+										"value": "@activity('Get Metadata of Employee Text file').output.lastModified",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"RecordInsertDate": {
+									"value": {
+										"value": "@convertFromUtc(utcNow(),'Eastern Standard Time')",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "adfdbLS",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Employee_Input')]",
+				"[concat(variables('factoryId'), '/linkedServices/adfdbLS')]"
+			]
 		}
 	]
 }
