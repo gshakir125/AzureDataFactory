@@ -1,5 +1,5 @@
 {
-	"name": "Copy from SQL to Data Lake",
+	"name": "Copy from CSV to SQL_Emp",
 	"properties": {
 		"activities": [
 			{
