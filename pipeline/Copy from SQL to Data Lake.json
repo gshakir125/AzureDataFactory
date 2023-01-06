@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy_shd",
+				"name": "Copy CSV to SQL_Emp",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -16,46 +16,57 @@
 				"userProperties": [
 					{
 						"name": "Source",
-						"value": "dbo.emp"
+						"value": "adfcontainer/Source/inputEmp_tq.txt"
 					},
 					{
 						"name": "Destination",
-						"value": "adfcontainer/Destination/employee.csv"
+						"value": "dbo.emp"
 					}
 				],
 				"typeProperties": {
 					"source": {
-						"type": "AzureSqlSource",
-						"queryTimeout": "00:05:00",
-						"partitionOption": "None"
-					},
-					"sink": {
-						"type": "DelimitedTextSink",
+						"type": "DelimitedTextSource",
 						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
 						},
 						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".txt"
+							"type": "DelimitedTextReadSettings"
 						}
 					},
-					"enableStaging": false,
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"disableMetricsCollection": false
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "Az_ADLS_maleeha",
+							"type": "LinkedServiceReference"
+						},
+						"path": "copyactivity-logs"
+					},
 					"enableSkipIncompatibleRow": false,
-					"validateDataConsistency": false,
+					"logSettings": {
+						"enableCopyActivityLog": true,
+						"copyActivityLogSettings": {
+							"logLevel": "Warning",
+							"enableReliableLogging": false
+						},
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "Az_ADLS_maleeha",
+								"type": "LinkedServiceReference"
+							},
+							"path": "copyactivity-logs"
+						}
+					},
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
-							{
-								"source": {
-									"name": "ID",
-									"type": "Int32"
-								},
-								"sink": {
-									"name": "ID",
-									"type": "String"
-								}
-							},
 							{
 								"source": {
 									"name": "FirstName",
@@ -81,13 +92,13 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "Az_SQL_Database_dbo_emp",
+						"referenceName": "Employee_Input",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "az_ADLS_Employee",
+						"referenceName": "Az_SQL_Database_dbo_emp",
 						"type": "DatasetReference"
 					}
 				]
