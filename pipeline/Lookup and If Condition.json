@@ -88,7 +88,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(\nformatDateTime(string(activity('Get Metadata of Employee Text file').output.lastModified),'yyyy-MM-dd HH:mm:ss')\n,formatDateTime(string(activity('Get Last Execution Date').output.firstRow),'yyyy-MM-dd HH:mm:ss')\n)",
+						"value": "@greaterOrEquals(\nformatDateTime(string(activity('Get Metadata of Employee Text file').output.lastModified),'yyyy-MM-ddTHH:mm:ss.fff')\n,formatDateTime(string(activity('Get Last Execution Date').output.firstRow),'yyyy-MM-ddTHH:mm:ss.fff')\n)",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
