@@ -88,7 +88,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(\naddhours(formatDateTime(\nactivity('Get Metadata of Employee Text file').output.lastModified,'o'),-4)\n,activity('Get Last Execution Date').output.firstRow\n)\n\n\n\n",
+						"value": "@greaterOrEquals(\naddhours(formatDateTime(\nactivity('Get Metadata of Employee Text file').output.lastModified,'o'),-4)\n,formatDateTime(activity('Get Last Execution Date').output.firstRow,'o'\n))\n\n\n\n",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
