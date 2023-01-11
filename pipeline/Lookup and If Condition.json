@@ -88,7 +88,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(\nstring(activity('Get Metadata of Employee Text file').output.lastModified)\n,string(activity('Get Last Execution Date').output.firstRow\n))",
+						"value": "@greaterOrEquals(\nstring(activity('Get Last Execution Date').output.firstRow)\n,string(activity('Get Metadata of Employee Text file').output.lastModified)\n\n)",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
