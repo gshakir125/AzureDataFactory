@@ -73,6 +73,47 @@
 						"type": "DatasetReference"
 					}
 				}
+			},
+			{
+				"name": "Get LastModifyDate",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Last Execution Date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greaterOrEquals(\n    activity('Get Metadata of Employee Text file').output.lastModified,activity('Get Last Execution Date').output.firstRow)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "False",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "True",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					]
+				}
 			}
 		],
 		"annotations": []
