@@ -88,7 +88,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(\n string(activity('Get Metadata of Employee Text file').output.lastModified)\n    ,string(activity('Get Last Execution Date').output.firstRow)\n)",
+						"value": "@greaterOrEquals(\n convertToUtc(string(activity('Get Metadata of Employee Text file').output.lastModified),'Eastern Standard Time')\n    ,convertToUtc(string(activity('Get Last Execution Date').output.firstRow),'Eastern Standard Time')\n)",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
