@@ -162,6 +162,52 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_GlobalSales_May2020')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Sales_May2020.csv",
+						"folderPath": "Source/GlobalSales",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "String"
+					},
+					{
+						"name": "SalesItem",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/az_ADLS_ProductAll')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -322,6 +368,91 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_SQL_GlobalSales')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adfdbLS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Date",
+						"type": "date"
+					},
+					{
+						"name": "Item",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					},
+					{
+						"name": "Quantity",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "FileName",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "GlobalSales"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adfdbLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_SQL_GlobalSalesBad')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "adfdbLS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Date",
+						"type": "varchar"
+					},
+					{
+						"name": "Item",
+						"type": "varchar"
+					},
+					{
+						"name": "Country",
+						"type": "varchar"
+					},
+					{
+						"name": "Quantity",
+						"type": "varchar"
+					},
+					{
+						"name": "FileName",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "GlobalSales_Bad"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/adfdbLS')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ProductFinal')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -335,7 +466,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "ProductFinal.csv",
+						"fileName": "FinalProduct.csv",
 						"folderPath": "Destination",
 						"fileSystem": "adfcontainer"
 					},
@@ -898,6 +1029,123 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DF_HandlingErrorRows')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_GlobalSales_May2020",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSalesMay2020"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_SQL_GlobalSalesBad",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSalesBad"
+						},
+						{
+							"dataset": {
+								"referenceName": "az_SQL_GlobalSales",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSales"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ValidateDateColumn"
+						},
+						{
+							"name": "GetFileName"
+						},
+						{
+							"name": "FileNameGoodRows"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesDate as string,",
+						"          SalesItem as string,",
+						"          Country as string,",
+						"          Quantity as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     modifiedAfter: (toTimestamp(1673481600000L))) ~> GlobalSalesMay2020",
+						"GlobalSalesMay2020 split(isNull(toDate(SalesDate, 'dd-MMM-yyy')),",
+						"     disjoint: false) ~> ValidateDateColumn@(ErrorRow, GoodRows)",
+						"ValidateDateColumn@ErrorRow derive(FileName = 'Sales_May2020.csv') ~> GetFileName",
+						"ValidateDateColumn@GoodRows derive(FileName = 'Sales_May2020.csv',",
+						"          SalesDate_Converted = toDate(SalesDate,'dd-MMM-yyyy'),",
+						"          Quantity_Converted = toInteger(Quantity)) ~> FileNameGoodRows",
+						"GetFileName sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Date as string,",
+						"          Item as string,",
+						"          Country as string,",
+						"          Quantity as string,",
+						"          FileName as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Date = SalesDate,",
+						"          Item = SalesItem,",
+						"          Country,",
+						"          Quantity,",
+						"          FileName",
+						"     )) ~> GlobalSalesBad",
+						"FileNameGoodRows sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Date as date,",
+						"          Item as string,",
+						"          Country as string,",
+						"          Quantity as integer,",
+						"          FileName as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Date = SalesDate_Converted,",
+						"          Item = SalesItem,",
+						"          Country,",
+						"          Quantity = Quantity_Converted,",
+						"          FileName",
+						"     )) ~> GlobalSales"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_GlobalSales_May2020')]",
+				"[concat(variables('factoryId'), '/datasets/az_SQL_GlobalSalesBad')]",
+				"[concat(variables('factoryId'), '/datasets/az_SQL_GlobalSales')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Product_Transformation')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -1026,13 +1274,13 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Execute Data Flow')]",
+			"name": "[concat(parameters('factoryName'), '/Execute DF_HandlingErrorRows')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Product Transformation",
+						"name": "DF_HandlingErrorRows",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -1045,13 +1293,13 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Product_Transformation",
+								"referenceName": "DF_HandlingErrorRows",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"ProductAll": {},
-									"ProductModel": {},
-									"ProductFinal": {}
+									"GlobalSalesMay2020": {},
+									"GlobalSalesBad": {},
+									"GlobalSales": {}
 								}
 							},
 							"staging": {},
@@ -1070,7 +1318,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Product_Transformation')]"
+				"[concat(variables('factoryId'), '/dataflows/DF_HandlingErrorRows')]"
 			]
 		}
 	]
