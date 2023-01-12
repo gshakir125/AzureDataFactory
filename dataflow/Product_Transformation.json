@@ -26,6 +26,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "ProductFinal"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_SQL_ProductFinal",
+						"type": "DatasetReference"
+					},
+					"name": "ProductFinalSQL"
 				}
 			],
 			"transformations": [
@@ -114,7 +121,43 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> ProductFinal"
+				"     skipDuplicateMapOutputs: true) ~> ProductFinal",
+				"RemoveZeroPrice sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductID,",
+				"          Name,",
+				"          {Model Name},",
+				"          ProductNumber,",
+				"          MakeFlag,",
+				"          FinishedGoodsFlag,",
+				"          Color,",
+				"          SafetyStockLevel,",
+				"          ReorderPoint,",
+				"          StandardCost,",
+				"          ListPrice,",
+				"          Size,",
+				"          SizeUnitMeasureCode,",
+				"          WeightUnitMeasureCode,",
+				"          Weight,",
+				"          DaysToManufacture,",
+				"          ProductLine,",
+				"          Class,",
+				"          Style,",
+				"          ProductSubcategoryID,",
+				"          ProductModelID,",
+				"          SellStartDate,",
+				"          SellEndDate,",
+				"          DiscontinuedDate",
+				"     )) ~> ProductFinalSQL"
 			]
 		}
 	}

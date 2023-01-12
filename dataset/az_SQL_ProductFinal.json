@@ -1,0 +1,16 @@
+{
+	"name": "az_SQL_ProductFinal",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adfdbLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "ProductFinal"
+		}
+	}
+}
