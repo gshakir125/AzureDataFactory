@@ -1,0 +1,31 @@
+{
+	"name": "DF_HandlingErrorRows",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_GlobalSales_May2020",
+						"type": "DatasetReference"
+					},
+					"name": "GlobalSalesMay2020"
+				}
+			],
+			"sinks": [],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          SalesDate as string,",
+				"          SalesItem as string,",
+				"          Country as string,",
+				"          Quantity as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     modifiedAfter: (toTimestamp(1673481600975L))) ~> GlobalSalesMay2020"
+			]
+		}
+	}
+}
