@@ -1,0 +1,33 @@
+{
+	"name": "az_SQL_GlobalSalesBad",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adfdbLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Date",
+				"type": "varchar"
+			},
+			{
+				"name": "Item",
+				"type": "varchar"
+			},
+			{
+				"name": "Country",
+				"type": "varchar"
+			},
+			{
+				"name": "Quantity",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "GlobalSales_Bad"
+		}
+	}
+}
