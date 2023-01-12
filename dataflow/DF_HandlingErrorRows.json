@@ -12,8 +12,33 @@
 					"name": "GlobalSalesMay2020"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_SQL_GlobalSalesBad",
+						"type": "DatasetReference"
+					},
+					"name": "GlobalSalesBad"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_SQL_GlobalSales",
+						"type": "DatasetReference"
+					},
+					"name": "GlobalSales"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ValidateDateColumn"
+				},
+				{
+					"name": "GetFileName"
+				},
+				{
+					"name": "FileNameGoodRows"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          SalesDate as string,",
@@ -24,7 +49,61 @@
 				"     allowSchemaDrift: false,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     modifiedAfter: (toTimestamp(1673481600975L))) ~> GlobalSalesMay2020"
+				"     modifiedAfter: (toTimestamp(1673481600975L))) ~> GlobalSalesMay2020",
+				"GlobalSalesMay2020 split(isNull(toDate(SalesDate, 'dd-MMM-yyy')),",
+				"     disjoint: false) ~> ValidateDateColumn@(ErrorRow, GoodRows)",
+				"ValidateDateColumn@ErrorRow derive(FileName = 'Sales_May2020.csv') ~> GetFileName",
+				"ValidateDateColumn@GoodRows derive(FileName = 'Sales_May2020.csv',",
+				"          SalesDate_Converted = toDate(SalesDate,'dd-MMM-yyyy'),",
+				"          Quantity_Converted = toInteger(Quantity)) ~> FileNameGoodRows",
+				"GetFileName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Date as string,",
+				"          Item as string,",
+				"          Country as string,",
+				"          Quantity as string,",
+				"          FileName as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Date = SalesDate,",
+				"          Item = SalesItem,",
+				"          Country,",
+				"          Quantity,",
+				"          FileName",
+				"     )) ~> GlobalSalesBad",
+				"FileNameGoodRows sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Date as date,",
+				"          Item as string,",
+				"          Country as string,",
+				"          Quantity as integer,",
+				"          FileName as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Date = SalesDate_Converted,",
+				"          Item = SalesItem,",
+				"          Country,",
+				"          Quantity = Quantity_Converted,",
+				"          FileName",
+				"     )) ~> GlobalSales"
 			]
 		}
 	}
