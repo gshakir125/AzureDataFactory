@@ -118,6 +118,8 @@
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
+				"     dateFormat:'yyyy/MM/dd',",
+				"     timestampFormat:'yyyy.MM.dd HH:mm:ss',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> ProductFinal"
 			]
