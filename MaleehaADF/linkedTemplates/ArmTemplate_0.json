@@ -344,20 +344,7 @@
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
-				"schema": [
-					{
-						"name": "ID",
-						"type": "String"
-					},
-					{
-						"name": "FirstName",
-						"type": "String"
-					},
-					{
-						"name": "LastName",
-						"type": "String"
-					}
-				]
+				"schema": []
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
@@ -1024,11 +1011,6 @@
 						"RemoveDups filter(greater(ListPrice,0)) ~> RemoveZeroPrice",
 						"RemoveZeroPrice sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     input(",
-						"          ID as string,",
-						"          FirstName as string,",
-						"          LastName as string",
-						"     ),",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
