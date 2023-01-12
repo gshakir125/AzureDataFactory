@@ -23,6 +23,10 @@
 			{
 				"name": "Quantity",
 				"type": "varchar"
+			},
+			{
+				"name": "FileName",
+				"type": "varchar"
 			}
 		],
 		"typeProperties": {
