@@ -24,6 +24,10 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"modifiedDatetimeEnd": {
+							"value": "adddays(utcNow,31)",
+							"type": "Expression"
+						},
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -51,19 +55,12 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Filter1",
-							"type": "Filter",
+							"name": "Wait1",
+							"type": "Wait",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
-								"items": {
-									"value": "@item()",
-									"type": "Expression"
-								},
-								"condition": {
-									"value": "@startswith(item().name,'T')",
-									"type": "Expression"
-								}
+								"waitTimeInSeconds": 2
 							}
 						}
 					]
