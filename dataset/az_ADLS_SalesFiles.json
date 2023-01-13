@@ -7,7 +7,8 @@
 		},
 		"parameters": {
 			"FileName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "Sales_May2020.csv"
 			}
 		},
 		"annotations": [],
