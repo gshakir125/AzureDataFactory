@@ -51,12 +51,19 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Wait1",
-							"type": "Wait",
+							"name": "Filter1",
+							"type": "Filter",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
-								"waitTimeInSeconds": 2
+								"items": {
+									"value": "@item()",
+									"type": "Expression"
+								},
+								"condition": {
+									"value": "@startswith(item().name,'T')",
+									"type": "Expression"
+								}
 							}
 						}
 					]
