@@ -116,7 +116,6 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     quoteAll: true,",
 				"     mapColumn(",
 				"          ProductID,",
 				"          Name,",
