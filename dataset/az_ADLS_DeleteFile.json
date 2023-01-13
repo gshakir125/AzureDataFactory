@@ -1,0 +1,27 @@
+{
+	"name": "az_ADLS_DeleteFile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Az_ADLS_maleeha",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().filename",
+					"type": "Expression"
+				},
+				"folderPath": "Files to be deleted",
+				"fileSystem": "adfcontainer"
+			}
+		}
+	}
+}
