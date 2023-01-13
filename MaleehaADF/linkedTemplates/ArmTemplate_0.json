@@ -368,6 +368,51 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_SalesFiles')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Source/GlobalSales",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "String"
+					},
+					{
+						"name": "SalesItem",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/az_SQL_GlobalSales')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -453,7 +498,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ProductFinal')]",
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_ProductFinal')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -823,6 +868,54 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Get Files Name Dynamically')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata of Sales Files",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "az_ADLS_SalesFiles",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_SalesFiles')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Get Metadata of File')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1143,182 +1236,6 @@
 				"[concat(variables('factoryId'), '/datasets/az_ADLS_GlobalSales_May2020')]",
 				"[concat(variables('factoryId'), '/datasets/az_SQL_GlobalSalesBad')]",
 				"[concat(variables('factoryId'), '/datasets/az_SQL_GlobalSales')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Product_Transformation')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "az_ADLS_ProductAll",
-								"type": "DatasetReference"
-							},
-							"name": "ProductAll"
-						},
-						{
-							"dataset": {
-								"referenceName": "az_ADLS_ProductModel",
-								"type": "DatasetReference"
-							},
-							"name": "ProductModel"
-						}
-					],
-					"sinks": [
-						{
-							"dataset": {
-								"referenceName": "ProductFinal",
-								"type": "DatasetReference"
-							},
-							"name": "ProductFinal"
-						}
-					],
-					"transformations": [
-						{
-							"name": "CombineDataset"
-						},
-						{
-							"name": "RemoveDups"
-						},
-						{
-							"name": "RemoveZeroPrice"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          ProductID as short,",
-						"          Name as string,",
-						"          ProductNumber as string,",
-						"          MakeFlag as boolean,",
-						"          FinishedGoodsFlag as boolean,",
-						"          Color as string,",
-						"          SafetyStockLevel as short,",
-						"          ReorderPoint as short,",
-						"          StandardCost as double,",
-						"          ListPrice as double,",
-						"          Size as string,",
-						"          SizeUnitMeasureCode as string,",
-						"          WeightUnitMeasureCode as string,",
-						"          Weight as string,",
-						"          DaysToManufacture as short,",
-						"          ProductLine as string,",
-						"          Class as string,",
-						"          Style as string,",
-						"          ProductSubcategoryID as string,",
-						"          ProductModelID as string,",
-						"          SellStartDate as timestamp,",
-						"          SellEndDate as timestamp,",
-						"          DiscontinuedDate as timestamp",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> ProductAll",
-						"source(output(",
-						"          ProductModelID as string,",
-						"          Name as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false) ~> ProductModel",
-						"ProductAll, ProductModel lookup(ProductAll@ProductModelID == ProductModel@ProductModelID,",
-						"     multiple: false,",
-						"     pickup: 'any',",
-						"     broadcast: 'auto')~> CombineDataset",
-						"CombineDataset select(mapColumn(",
-						"          ProductID,",
-						"          Name = ProductAll@Name,",
-						"          {Model Name} = ProductModel@Name,",
-						"          ProductNumber,",
-						"          MakeFlag,",
-						"          FinishedGoodsFlag,",
-						"          Color,",
-						"          SafetyStockLevel,",
-						"          ReorderPoint,",
-						"          StandardCost,",
-						"          ListPrice,",
-						"          Size,",
-						"          SizeUnitMeasureCode,",
-						"          WeightUnitMeasureCode,",
-						"          Weight,",
-						"          DaysToManufacture,",
-						"          ProductLine,",
-						"          Class,",
-						"          Style,",
-						"          ProductSubcategoryID,",
-						"          ProductModelID = ProductAll@ProductModelID,",
-						"          SellStartDate,",
-						"          SellEndDate,",
-						"          DiscontinuedDate",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RemoveDups",
-						"RemoveDups filter(greater(ListPrice,0)) ~> RemoveZeroPrice",
-						"RemoveZeroPrice sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     umask: 0022,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> ProductFinal"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/az_ADLS_ProductAll')]",
-				"[concat(variables('factoryId'), '/datasets/az_ADLS_ProductModel')]",
-				"[concat(variables('factoryId'), '/datasets/ProductFinal')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Execute DF_HandlingErrorRows')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_HandlingErrorRows",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_HandlingErrorRows",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"GlobalSalesMay2020": {},
-									"GlobalSalesBad": {},
-									"GlobalSales": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_HandlingErrorRows')]"
 			]
 		}
 	]

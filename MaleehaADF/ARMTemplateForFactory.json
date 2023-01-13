@@ -333,13 +333,13 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Product_Transformation",
+								"referenceName": "Product Transformation",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
 									"ProductAll": {},
 									"ProductModel": {},
-									"ProductFinal": {}
+									"FinalProduct": {}
 								}
 							},
 							"staging": {},
@@ -358,7 +358,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Product_Transformation')]"
+				"[concat(variables('factoryId'), '/dataflows/Product Transformation')]"
 			]
 		},
 		{
@@ -459,6 +459,54 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Employee_Input')]",
 				"[concat(variables('factoryId'), '/linkedServices/adfdbLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Get Files Name Dynamically')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata of Sales Files",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "az_ADLS_SalesFiles",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_SalesFiles')]"
 			]
 		},
 		{
@@ -971,6 +1019,51 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_SalesFiles')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Source/GlobalSales",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "String"
+					},
+					{
+						"name": "SalesItem",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/az_SQL_GlobalSales')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1213,7 +1306,7 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Product_Transformation')]",
+			"name": "[concat(parameters('factoryName'), '/Product Transformation')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1238,48 +1331,48 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "ProductFinal",
+								"referenceName": "az_ADLS_ProductFinal",
 								"type": "DatasetReference"
 							},
-							"name": "ProductFinal"
+							"name": "FinalProduct"
 						}
 					],
 					"transformations": [
 						{
-							"name": "CombineDataset"
+							"name": "LookupforProductandProductModel"
 						},
 						{
-							"name": "RemoveDups"
+							"name": "RemoveDuplicate"
 						},
 						{
-							"name": "RemoveZeroPrice"
+							"name": "RemoveRecordwithZeroPrice"
 						}
 					],
 					"scriptLines": [
 						"source(output(",
-						"          ProductID as short,",
+						"          ProductID as string,",
 						"          Name as string,",
 						"          ProductNumber as string,",
-						"          MakeFlag as boolean,",
-						"          FinishedGoodsFlag as boolean,",
+						"          MakeFlag as string,",
+						"          FinishedGoodsFlag as string,",
 						"          Color as string,",
-						"          SafetyStockLevel as short,",
-						"          ReorderPoint as short,",
-						"          StandardCost as double,",
-						"          ListPrice as double,",
+						"          SafetyStockLevel as string,",
+						"          ReorderPoint as string,",
+						"          StandardCost as string,",
+						"          ListPrice as string,",
 						"          Size as string,",
 						"          SizeUnitMeasureCode as string,",
 						"          WeightUnitMeasureCode as string,",
 						"          Weight as string,",
-						"          DaysToManufacture as short,",
+						"          DaysToManufacture as string,",
 						"          ProductLine as string,",
 						"          Class as string,",
 						"          Style as string,",
 						"          ProductSubcategoryID as string,",
 						"          ProductModelID as string,",
-						"          SellStartDate as timestamp,",
-						"          SellEndDate as timestamp,",
-						"          DiscontinuedDate as timestamp",
+						"          SellStartDate as string,",
+						"          SellEndDate as string,",
+						"          DiscontinuedDate as string",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
@@ -1294,8 +1387,8 @@
 						"ProductAll, ProductModel lookup(ProductAll@ProductModelID == ProductModel@ProductModelID,",
 						"     multiple: false,",
 						"     pickup: 'any',",
-						"     broadcast: 'auto')~> CombineDataset",
-						"CombineDataset select(mapColumn(",
+						"     broadcast: 'auto')~> LookupforProductandProductModel",
+						"LookupforProductandProductModel select(mapColumn(",
 						"          ProductID,",
 						"          Name = ProductAll@Name,",
 						"          {Model Name} = ProductModel@Name,",
@@ -1322,26 +1415,26 @@
 						"          DiscontinuedDate",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> RemoveDups",
-						"RemoveDups filter(greater(ListPrice,0)) ~> RemoveZeroPrice",
-						"RemoveZeroPrice sink(allowSchemaDrift: true,",
+						"     skipDuplicateMapOutputs: true) ~> RemoveDuplicate",
+						"RemoveDuplicate filter(greater(toInteger(ListPrice), 0)) ~> RemoveRecordwithZeroPrice",
+						"RemoveRecordwithZeroPrice sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> ProductFinal"
+						"     skipDuplicateMapOutputs: true) ~> FinalProduct"
 					]
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/az_ADLS_ProductAll')]",
 				"[concat(variables('factoryId'), '/datasets/az_ADLS_ProductModel')]",
-				"[concat(variables('factoryId'), '/datasets/ProductFinal')]"
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_ProductFinal')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ProductFinal')]",
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_ProductFinal')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {

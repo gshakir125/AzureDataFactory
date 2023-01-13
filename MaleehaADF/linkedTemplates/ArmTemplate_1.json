@@ -13,6 +13,176 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Product Transformation')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_ProductAll",
+								"type": "DatasetReference"
+							},
+							"name": "ProductAll"
+						},
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_ProductModel",
+								"type": "DatasetReference"
+							},
+							"name": "ProductModel"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_ProductFinal",
+								"type": "DatasetReference"
+							},
+							"name": "FinalProduct"
+						}
+					],
+					"transformations": [
+						{
+							"name": "LookupforProductandProductModel"
+						},
+						{
+							"name": "RemoveDuplicate"
+						},
+						{
+							"name": "RemoveRecordwithZeroPrice"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ProductID as string,",
+						"          Name as string,",
+						"          ProductNumber as string,",
+						"          MakeFlag as string,",
+						"          FinishedGoodsFlag as string,",
+						"          Color as string,",
+						"          SafetyStockLevel as string,",
+						"          ReorderPoint as string,",
+						"          StandardCost as string,",
+						"          ListPrice as string,",
+						"          Size as string,",
+						"          SizeUnitMeasureCode as string,",
+						"          WeightUnitMeasureCode as string,",
+						"          Weight as string,",
+						"          DaysToManufacture as string,",
+						"          ProductLine as string,",
+						"          Class as string,",
+						"          Style as string,",
+						"          ProductSubcategoryID as string,",
+						"          ProductModelID as string,",
+						"          SellStartDate as string,",
+						"          SellEndDate as string,",
+						"          DiscontinuedDate as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> ProductAll",
+						"source(output(",
+						"          ProductModelID as string,",
+						"          Name as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> ProductModel",
+						"ProductAll, ProductModel lookup(ProductAll@ProductModelID == ProductModel@ProductModelID,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LookupforProductandProductModel",
+						"LookupforProductandProductModel select(mapColumn(",
+						"          ProductID,",
+						"          Name = ProductAll@Name,",
+						"          {Model Name} = ProductModel@Name,",
+						"          ProductNumber,",
+						"          MakeFlag,",
+						"          FinishedGoodsFlag,",
+						"          Color,",
+						"          SafetyStockLevel,",
+						"          ReorderPoint,",
+						"          StandardCost,",
+						"          ListPrice,",
+						"          Size,",
+						"          SizeUnitMeasureCode,",
+						"          WeightUnitMeasureCode,",
+						"          Weight,",
+						"          DaysToManufacture,",
+						"          ProductLine,",
+						"          Class,",
+						"          Style,",
+						"          ProductSubcategoryID,",
+						"          ProductModelID = ProductAll@ProductModelID,",
+						"          SellStartDate,",
+						"          SellEndDate,",
+						"          DiscontinuedDate",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RemoveDuplicate",
+						"RemoveDuplicate filter(greater(toInteger(ListPrice), 0)) ~> RemoveRecordwithZeroPrice",
+						"RemoveRecordwithZeroPrice sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> FinalProduct"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Execute DF_HandlingErrorRows')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "DF_HandlingErrorRows",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_HandlingErrorRows",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"GlobalSalesMay2020": {},
+									"GlobalSalesBad": {},
+									"GlobalSales": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 16,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Execute Data Flow Product Transformation')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -32,13 +202,13 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "Product_Transformation",
+								"referenceName": "Product Transformation",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
 									"ProductAll": {},
 									"ProductModel": {},
-									"ProductFinal": {}
+									"FinalProduct": {}
 								}
 							},
 							"staging": {},
@@ -56,7 +226,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/Product Transformation')]"
+			]
 		}
 	]
 }
