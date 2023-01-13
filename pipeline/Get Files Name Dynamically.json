@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "az_ADLS_SalesFiles",
+						"referenceName": "az_ADLS_SalesInput",
 						"type": "DatasetReference"
 					},
 					"fieldList": [
