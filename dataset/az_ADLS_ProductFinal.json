@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "FinalProduct.csv",
 				"folderPath": "Destination",
 				"fileSystem": "adfcontainer"
 			},
