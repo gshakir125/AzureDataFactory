@@ -1,5 +1,5 @@
 {
-	"name": "Product_Transformation",
+	"name": "dataflow1",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
@@ -21,48 +21,49 @@
 			],
 			"sinks": [
 				{
-					"name": "ProductFinal"
-				},
-				{
-					"name": "ProductFinalSQL"
+					"dataset": {
+						"referenceName": "az_ADLS_ProductFinal",
+						"type": "DatasetReference"
+					},
+					"name": "FinalProduct"
 				}
 			],
 			"transformations": [
 				{
-					"name": "CombineDataset"
+					"name": "LookupforProductandProductModel"
 				},
 				{
-					"name": "RemoveDups"
+					"name": "RemoveDuplicate"
 				},
 				{
-					"name": "RemoveZeroPrice"
+					"name": "RemoveRecordwithZeroPrice"
 				}
 			],
 			"scriptLines": [
 				"source(output(",
-				"          ProductID as short,",
+				"          ProductID as string,",
 				"          Name as string,",
 				"          ProductNumber as string,",
-				"          MakeFlag as boolean,",
-				"          FinishedGoodsFlag as boolean,",
+				"          MakeFlag as string,",
+				"          FinishedGoodsFlag as string,",
 				"          Color as string,",
-				"          SafetyStockLevel as short,",
-				"          ReorderPoint as short,",
-				"          StandardCost as double,",
-				"          ListPrice as double,",
+				"          SafetyStockLevel as string,",
+				"          ReorderPoint as string,",
+				"          StandardCost as string,",
+				"          ListPrice as string,",
 				"          Size as string,",
 				"          SizeUnitMeasureCode as string,",
 				"          WeightUnitMeasureCode as string,",
 				"          Weight as string,",
-				"          DaysToManufacture as short,",
+				"          DaysToManufacture as string,",
 				"          ProductLine as string,",
 				"          Class as string,",
 				"          Style as string,",
 				"          ProductSubcategoryID as string,",
 				"          ProductModelID as string,",
-				"          SellStartDate as timestamp,",
-				"          SellEndDate as timestamp,",
-				"          DiscontinuedDate as timestamp",
+				"          SellStartDate as string,",
+				"          SellEndDate as string,",
+				"          DiscontinuedDate as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -77,8 +78,8 @@
 				"ProductAll, ProductModel lookup(ProductAll@ProductModelID == ProductModel@ProductModelID,",
 				"     multiple: false,",
 				"     pickup: 'any',",
-				"     broadcast: 'auto')~> CombineDataset",
-				"CombineDataset select(mapColumn(",
+				"     broadcast: 'auto')~> LookupforProductandProductModel",
+				"LookupforProductandProductModel select(mapColumn(",
 				"          ProductID,",
 				"          Name = ProductAll@Name,",
 				"          {Model Name} = ProductModel@Name,",
@@ -105,45 +106,15 @@
 				"          DiscontinuedDate",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> RemoveDups",
-				"RemoveDups filter(greater(ListPrice,0)) ~> RemoveZeroPrice",
-				"RemoveZeroPrice sink(allowSchemaDrift: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveDuplicate",
+				"RemoveDuplicate filter(greater(toInteger(ListPrice), 0)) ~> RemoveRecordwithZeroPrice",
+				"RemoveRecordwithZeroPrice sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
+				"     umask: 0022,",
 				"     preCommands: [],",
-				"     postCommands: []) ~> ProductFinal",
-				"RemoveZeroPrice sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
+				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     mapColumn(",
-				"          ProductID,",
-				"          Name,",
-				"          {Model Name},",
-				"          ProductNumber,",
-				"          MakeFlag,",
-				"          FinishedGoodsFlag,",
-				"          Color,",
-				"          SafetyStockLevel,",
-				"          ReorderPoint,",
-				"          StandardCost,",
-				"          ListPrice,",
-				"          Size,",
-				"          SizeUnitMeasureCode,",
-				"          WeightUnitMeasureCode,",
-				"          Weight,",
-				"          DaysToManufacture,",
-				"          ProductLine,",
-				"          Class,",
-				"          Style,",
-				"          ProductSubcategoryID,",
-				"          ProductModelID,",
-				"          SellStartDate,",
-				"          SellEndDate,",
-				"          DiscontinuedDate",
-				"     ),",
-				"     format: 'table') ~> ProductFinalSQL"
+				"     skipDuplicateMapOutputs: true) ~> FinalProduct"
 			]
 		}
 	}
