@@ -13,6 +13,269 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/Lookup and If Condition')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata of Employee Text file",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Employee_Input",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"lastModified",
+								"itemName"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Get Last Execution Date",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata of Employee Text file",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzureSqlSource",
+								"sqlReaderStoredProcedureName": "[[dbo].[sp_GetExecutionDate]",
+								"storedProcedureParameters": {
+									"Name": {
+										"type": "String",
+										"value": {
+											"value": "@activity('Get Metadata of Employee Text file').output.itemName",
+											"type": "Expression"
+										}
+									}
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "Az_SQL_Database_dbo_emp",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Get LastModifyDate",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Last Execution Date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greaterOrEquals(\n   string(activity('Get Last Execution Date').output.firstRow)\n   , string(\n        activity('Get Metadata of Employee Text file').output.lastModified)\n    )",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "False",
+									"type": "Wait",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"waitTimeInSeconds": 1
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "sp_UpdateExecutionDate",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[sp_UpdateExecutionDate]",
+										"storedProcedureParameters": {
+											"ExecutionDate": {
+												"value": {
+													"value": "@convertFromUtc(pipeline().TriggerTime,'Eastern Standard Time')",
+													"type": "Expression"
+												},
+												"type": "DateTime"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "adfdbLS",
+										"type": "LinkedServiceReference"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_HandlingErrorRows')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_GlobalSales_May2020",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSalesMay2020"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_SQL_GlobalSalesBad",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSalesBad"
+						},
+						{
+							"dataset": {
+								"referenceName": "az_SQL_GlobalSales",
+								"type": "DatasetReference"
+							},
+							"name": "GlobalSales"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ValidateDateColumn"
+						},
+						{
+							"name": "GetFileName"
+						},
+						{
+							"name": "FileNameGoodRows"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesDate as string,",
+						"          SalesItem as string,",
+						"          Country as string,",
+						"          Quantity as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     modifiedAfter: (toTimestamp(1673481600000L))) ~> GlobalSalesMay2020",
+						"GlobalSalesMay2020 split(isNull(toDate(SalesDate, 'dd-MMM-yyy')),",
+						"     disjoint: false) ~> ValidateDateColumn@(ErrorRow, GoodRows)",
+						"ValidateDateColumn@ErrorRow derive(FileName = 'Sales_May2020.csv') ~> GetFileName",
+						"ValidateDateColumn@GoodRows derive(FileName = 'Sales_May2020.csv',",
+						"          SalesDate_Converted = toDate(SalesDate,'dd-MMM-yyyy'),",
+						"          Quantity_Converted = toInteger(Quantity)) ~> FileNameGoodRows",
+						"GetFileName sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Date as string,",
+						"          Item as string,",
+						"          Country as string,",
+						"          Quantity as string,",
+						"          FileName as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Date = SalesDate,",
+						"          Item = SalesItem,",
+						"          Country,",
+						"          Quantity,",
+						"          FileName",
+						"     )) ~> GlobalSalesBad",
+						"FileNameGoodRows sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          Date as date,",
+						"          Item as string,",
+						"          Country as string,",
+						"          Quantity as integer,",
+						"          FileName as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Date = SalesDate_Converted,",
+						"          Item = SalesItem,",
+						"          Country,",
+						"          Quantity = Quantity_Converted,",
+						"          FileName",
+						"     )) ~> GlobalSales"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Product Transformation')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -180,7 +443,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_HandlingErrorRows')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Execute Data Flow Product Transformation')]",
