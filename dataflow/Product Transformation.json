@@ -110,11 +110,13 @@
 				"RemoveDuplicate filter(greater(toInteger(ListPrice), 0)) ~> RemoveRecordwithZeroPrice",
 				"RemoveRecordwithZeroPrice sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     partitionFileNames:['FinalProduct.csv'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> FinalProduct"
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> FinalProduct"
 			]
 		}
 	}
