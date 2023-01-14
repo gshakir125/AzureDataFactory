@@ -1,0 +1,109 @@
+{
+	"name": "DF Increment Keys",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_all_emp",
+						"type": "DatasetReference"
+					},
+					"name": "ConsolidateEmployees"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_Emp3",
+						"type": "DatasetReference"
+					},
+					"name": "Emp3"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_all_emp",
+						"type": "DatasetReference"
+					},
+					"name": "ConsolidatedEmployees"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AddDummyColumn"
+				},
+				{
+					"name": "GetMaxID"
+				},
+				{
+					"name": "JoinBothSources"
+				},
+				{
+					"name": "AddIDColumn"
+				},
+				{
+					"name": "AddIDandMaxID"
+				},
+				{
+					"name": "RemoveUnnecessaryColumns"
+				},
+				{
+					"name": "MergeEmp3intoConsolidatedEmployee"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmpID as string,",
+				"          { Name} as string,",
+				"          { Country} as string,",
+				"          { Department} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ConsolidateEmployees",
+				"source(output(",
+				"          Name as string,",
+				"          { Country} as string,",
+				"          { Department} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Emp3",
+				"ConsolidateEmployees derive(Dummy = 'Dummy') ~> AddDummyColumn",
+				"AddDummyColumn aggregate(groupBy(Dummy),",
+				"     MaxID = max(EmpID)) ~> GetMaxID",
+				"GetMaxID, Emp3 join(1==1,",
+				"     joinType:'cross',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoinBothSources",
+				"JoinBothSources keyGenerate(output(id as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> AddIDColumn",
+				"AddIDColumn derive(EmpID = toString(toInteger(id) + toInteger(MaxID))) ~> AddIDandMaxID",
+				"AddIDandMaxID select(mapColumn(",
+				"          EmpID,",
+				"          Name,",
+				"          { Country},",
+				"          { Department}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveUnnecessaryColumns",
+				"ConsolidateEmployees, RemoveUnnecessaryColumns union(byName: false)~> MergeEmp3intoConsolidatedEmployee",
+				"MergeEmp3intoConsolidatedEmployee sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmpID as string,",
+				"          { Name} as string,",
+				"          { Country} as string,",
+				"          { Department} as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ConsolidatedEmployees"
+			]
+		}
+	}
+}
