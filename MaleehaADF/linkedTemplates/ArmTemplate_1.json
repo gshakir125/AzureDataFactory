@@ -1541,11 +1541,13 @@
 						"          { Country} as string,",
 						"          { Department} as string",
 						"     ),",
+						"     partitionFileNames:['ConsolidatedEmployee.csv'],",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> ConsolidatedEmployees"
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> ConsolidatedEmployees"
 					]
 				}
 			},
