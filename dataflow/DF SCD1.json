@@ -54,7 +54,6 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          ID,",
 				"          FirstName,",
 				"          LastName",
 				"     )) ~> DimEmployee"
