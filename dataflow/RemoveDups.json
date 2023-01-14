@@ -19,8 +19,26 @@
 					"name": "Emp2"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_ConsolidatedEmployee",
+						"type": "DatasetReference"
+					},
+					"name": "ConsolidatedEmployee"
+				}
+			],
+			"transformations": [
+				{
+					"name": "MergeEmp1andEmp2"
+				},
+				{
+					"name": "RemoveDup"
+				},
+				{
+					"name": "Sorting"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          EmpID as string,",
@@ -39,7 +57,20 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> Emp2"
+				"     ignoreNoFilesFound: false) ~> Emp2",
+				"Emp1, Emp2 union(byName: true)~> MergeEmp1andEmp2",
+				"MergeEmp1andEmp2 aggregate(groupBy(EmpID),",
+				"     each(match(name!='EmpID'), $$ = first($$))) ~> RemoveDup",
+				"RemoveDup sort(asc(EmpID, true)) ~> Sorting",
+				"Sorting sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['ConsolidatedEmployee,csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ConsolidatedEmployee"
 			]
 		}
 	}
