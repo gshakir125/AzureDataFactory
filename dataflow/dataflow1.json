@@ -1,0 +1,73 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_dummy",
+						"type": "DatasetReference"
+					},
+					"name": "DummySource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_Log",
+						"type": "DatasetReference"
+					},
+					"name": "ADFLogFile"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ParametersValue"
+				},
+				{
+					"name": "RemoveDummyColumn"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     ADFName as string,",
+				"     PipeLineName as string,",
+				"     RunID as string,",
+				"     Status as string,",
+				"     TriggerName as string,",
+				"     logFileName as string",
+				"}",
+				"source(output(",
+				"          Column_1 as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> DummySource",
+				"DummySource derive(ADFName = $ADFName,",
+				"          PipeLineName = $PipeLineName,",
+				"          RunId = $RunID,",
+				"          Status = $Status,",
+				"          TriggerName = $TriggerName) ~> ParametersValue",
+				"ParametersValue select(mapColumn(",
+				"          ADFName,",
+				"          PipeLineName,",
+				"          RunId,",
+				"          Status,",
+				"          TriggerName",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveDummyColumn",
+				"RemoveDummyColumn sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[($logFileName)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ADFLogFile"
+			]
+		}
+	}
+}
