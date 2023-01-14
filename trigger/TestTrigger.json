@@ -1,0 +1,32 @@
+{
+	"name": "TestTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Delete Files older Than 30 Days",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-01-14T03:33:00",
+				"timeZone": "UTC-11",
+				"schedule": {
+					"minutes": [
+						40
+					],
+					"hours": [
+						3
+					]
+				}
+			}
+		}
+	}
+}
