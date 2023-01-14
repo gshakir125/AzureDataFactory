@@ -1,0 +1,28 @@
+{
+	"name": "az_ADLS_dummy",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Az_ADLS_maleeha",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "dummy.txt",
+				"folderPath": "Source",
+				"fileSystem": "adfcontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			}
+		]
+	}
+}
