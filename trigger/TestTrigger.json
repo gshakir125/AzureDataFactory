@@ -17,13 +17,13 @@
 				"frequency": "Day",
 				"interval": 1,
 				"startTime": "2023-01-14T03:33:00",
-				"timeZone": "UTC-11",
+				"timeZone": "Pakistan Standard Time",
 				"schedule": {
 					"minutes": [
-						50
+						1
 					],
 					"hours": [
-						3
+						9
 					]
 				}
 			}
