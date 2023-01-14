@@ -10,6 +10,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "Emp1"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_emp2",
+						"type": "DatasetReference"
+					},
+					"name": "Emp2"
 				}
 			],
 			"sinks": [],
@@ -23,7 +30,16 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> Emp1"
+				"     ignoreNoFilesFound: false) ~> Emp1",
+				"source(output(",
+				"          EmpID as string,",
+				"          { Name} as string,",
+				"          { Country} as string,",
+				"          { Department} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> Emp2"
 			]
 		}
 	}
