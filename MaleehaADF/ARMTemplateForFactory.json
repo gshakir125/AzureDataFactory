@@ -453,6 +453,54 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Execute DF ConsolidatedEmployee')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ConsolidatedEmployee",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "RemoveDups",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"Emp1": {},
+									"Emp2": {},
+									"ConsolidatedEmployee": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 16,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/RemoveDups')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Execute DF_HandlingErrorRows')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1107,6 +1155,34 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_ConsolidatedEmployee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Destination",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/az_ADLS_DeleteFile')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1611,6 +1687,98 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_emp1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Emp1.txt",
+						"folderPath": "Source/Employees",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpID",
+						"type": "String"
+					},
+					{
+						"name": " Name",
+						"type": "String"
+					},
+					{
+						"name": " Country",
+						"type": "String"
+					},
+					{
+						"name": " Department",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_emp2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Emp2.txt",
+						"folderPath": "Source/Employees",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "EmpID",
+						"type": "String"
+					},
+					{
+						"name": " Name",
+						"type": "String"
+					},
+					{
+						"name": " Country",
+						"type": "String"
+					},
+					{
+						"name": " Department",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/az_ADLS_emp_output')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1752,6 +1920,44 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TestTrigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Delete Files older Than 30 Days",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2023-01-14T03:33:00",
+						"timeZone": "Pakistan Standard Time",
+						"schedule": {
+							"minutes": [
+								1
+							],
+							"hours": [
+								9
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Delete Files older Than 30 Days')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/SelfHostedIR')]",
@@ -2106,44 +2312,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/TestTrigger')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Delete Files older Than 30 Days",
-							"type": "PipelineReference"
-						},
-						"parameters": {}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2023-01-14T03:33:00",
-						"timeZone": "Pakistan Standard Time",
-						"schedule": {
-							"minutes": [
-								1
-							],
-							"hours": [
-								9
-							]
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Delete Files older Than 30 Days')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/RemoveDups')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
@@ -2229,53 +2397,122 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/az_ADLS_emp1')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
+			"name": "[concat(parameters('factoryName'), '/DF Increment Keys')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Az_ADLS_maleeha",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
+				"type": "MappingDataFlow",
 				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "Emp1.txt",
-						"folderPath": "Source/Employees",
-						"fileSystem": "adfcontainer"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "EmpID",
-						"type": "String"
-					},
-					{
-						"name": " Name",
-						"type": "String"
-					},
-					{
-						"name": " Country",
-						"type": "String"
-					},
-					{
-						"name": " Department",
-						"type": "String"
-					}
-				]
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_all_emp",
+								"type": "DatasetReference"
+							},
+							"name": "ConsolidateEmployees"
+						},
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_Emp3",
+								"type": "DatasetReference"
+							},
+							"name": "Emp3"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_all_emp",
+								"type": "DatasetReference"
+							},
+							"name": "ConsolidatedEmployees"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AddDummyColumn"
+						},
+						{
+							"name": "GetMaxID"
+						},
+						{
+							"name": "JoinBothSources"
+						},
+						{
+							"name": "AddIDColumn"
+						},
+						{
+							"name": "AddIDandMaxID"
+						},
+						{
+							"name": "RemoveUnnecessaryColumns"
+						},
+						{
+							"name": "MergeEmp3intoConsolidatedEmployee"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmpID as string,",
+						"          { Name} as string,",
+						"          { Country} as string,",
+						"          { Department} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> ConsolidateEmployees",
+						"source(output(",
+						"          Name as string,",
+						"          { Country} as string,",
+						"          { Department} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Emp3",
+						"ConsolidateEmployees derive(Dummy = 'Dummy') ~> AddDummyColumn",
+						"AddDummyColumn aggregate(groupBy(Dummy),",
+						"     MaxID = max(EmpID)) ~> GetMaxID",
+						"GetMaxID, Emp3 join(1==1,",
+						"     joinType:'cross',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinBothSources",
+						"JoinBothSources keyGenerate(output(id as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> AddIDColumn",
+						"AddIDColumn derive(EmpID = toString(toInteger(id) + toInteger(MaxID))) ~> AddIDandMaxID",
+						"AddIDandMaxID select(mapColumn(",
+						"          EmpID,",
+						"          Name,",
+						"          { Country},",
+						"          { Department}",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RemoveUnnecessaryColumns",
+						"ConsolidateEmployees, RemoveUnnecessaryColumns union(byName: false)~> MergeEmp3intoConsolidatedEmployee",
+						"MergeEmp3intoConsolidatedEmployee sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          EmpID as string,",
+						"          { Name} as string,",
+						"          { Country} as string,",
+						"          { Department} as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ConsolidatedEmployees"
+					]
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_all_emp')]",
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_Emp3')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/az_ADLS_emp2')]",
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_all_emp')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -2288,52 +2525,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "Emp2.txt",
-						"folderPath": "Source/Employees",
-						"fileSystem": "adfcontainer"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "EmpID",
-						"type": "String"
-					},
-					{
-						"name": " Name",
-						"type": "String"
-					},
-					{
-						"name": " Country",
-						"type": "String"
-					},
-					{
-						"name": " Department",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/az_ADLS_ConsolidatedEmployee')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Az_ADLS_maleeha",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
+						"fileName": "ConsolidatedEmployee.csv",
 						"folderPath": "Destination",
 						"fileSystem": "adfcontainer"
 					},
@@ -2342,20 +2534,79 @@
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
-				"schema": []
+				"schema": [
+					{
+						"name": "EmpID",
+						"type": "String"
+					},
+					{
+						"name": " Name",
+						"type": "String"
+					},
+					{
+						"name": " Country",
+						"type": "String"
+					},
+					{
+						"name": " Department",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Execute DF ConsolidatedEmployee')]",
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_Emp3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Emp3.txt",
+						"folderPath": "Source/Employees",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Name",
+						"type": "String"
+					},
+					{
+						"name": " Country",
+						"type": "String"
+					},
+					{
+						"name": " Department",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Execute DF IncrementKeys')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "ConsolidatedEmployee",
+						"name": "DF IncrementKeys",
 						"type": "ExecuteDataFlow",
 						"dependsOn": [],
 						"policy": {
@@ -2368,18 +2619,18 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "RemoveDups",
+								"referenceName": "DF Increment Keys",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"Emp1": {},
-									"Emp2": {},
-									"ConsolidatedEmployee": {}
+									"ConsolidateEmployees": {},
+									"Emp3": {},
+									"ConsolidatedEmployees": {}
 								}
 							},
 							"staging": {},
 							"compute": {
-								"coreCount": 16,
+								"coreCount": 8,
 								"computeType": "General"
 							},
 							"traceLevel": "Fine"
@@ -2393,7 +2644,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/RemoveDups')]"
+				"[concat(variables('factoryId'), '/dataflows/DF Increment Keys')]"
 			]
 		}
 	]
