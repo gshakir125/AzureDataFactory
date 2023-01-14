@@ -178,6 +178,76 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_MaySales_IN')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Sales_May2022.csv",
+						"folderPath": "Source/GlobalSales",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "SalesDate",
+						"type": "String"
+					},
+					{
+						"name": "SalesItem",
+						"type": "String"
+					},
+					{
+						"name": "Country",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_RunningTotal_OU')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "Destination/SalesOutput",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Copy from CSV to SQL_Emp')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1557,6 +1627,65 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DF SalesRunningTotal')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_MaySales_IN",
+								"type": "DatasetReference"
+							},
+							"name": "MaySales"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_RunningTotal_OU",
+								"type": "DatasetReference"
+							},
+							"name": "SalesRunningTotal"
+						}
+					],
+					"transformations": [
+						{
+							"name": "CalculateRunningTotal"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SalesDate as string,",
+						"          SalesItem as string,",
+						"          Country as string,",
+						"          Quantity as long",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> MaySales",
+						"MaySales window(asc(SalesDate, true),",
+						"     RunningTotal = sum(toInteger(Quantity))) ~> CalculateRunningTotal",
+						"CalculateRunningTotal sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:['SalesRunningTotal.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> SalesRunningTotal"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_MaySales_IN')]",
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_RunningTotal_OU')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Execute DF ConsolidatedEmployee')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1602,149 +1731,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/RemoveDups')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Execute DF_HandlingErrorRows')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "DF_HandlingErrorRows",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "DF_HandlingErrorRows",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"GlobalSalesMay2020": {},
-									"GlobalSalesBad": {},
-									"GlobalSales": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/DF_HandlingErrorRows')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Execute Data Flow Product Transformation')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Product Transformation",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Product Transformation",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"ProductAll": {},
-									"ProductModel": {},
-									"FinalProduct": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 16,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Product Transformation')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Execute Process Fixed Length')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Process Fixed Length",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "Process Fixed Length",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"EmpTextFile": {},
-									"CleanEmp": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/Process Fixed Length')]"
 			]
 		}
 	]
