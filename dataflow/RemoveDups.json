@@ -61,7 +61,7 @@
 				"Emp1, Emp2 union(byName: true)~> MergeEmp1andEmp2",
 				"MergeEmp1andEmp2 aggregate(groupBy(EmpID),",
 				"     each(match(name!='EmpID'), $$ = first($$))) ~> RemoveDup",
-				"RemoveDup sort(asc(EmpID, false)) ~> Sorting",
+				"RemoveDup sort(asc(EmpID, true)) ~> Sorting",
 				"Sorting sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     partitionFileNames:['ConsolidatedEmployee.csv'],",
