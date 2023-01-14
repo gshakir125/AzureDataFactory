@@ -2828,6 +2828,514 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/DF SalesRunningTotal')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_dummy')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dummy.txt",
+						"folderPath": "Source",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF LogADF')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_dummy",
+								"type": "DatasetReference"
+							},
+							"name": "DummySource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_Log",
+								"type": "DatasetReference"
+							},
+							"name": "ADFLogFile"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ParametersValue"
+						},
+						{
+							"name": "RemoveDummyColumn"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     ADFName as string,",
+						"     PipeLineName as string,",
+						"     RunID as string,",
+						"     Status as string,",
+						"     TriggerName as string,",
+						"     logFileName as string",
+						"}",
+						"source(output(",
+						"          Column_1 as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> DummySource",
+						"DummySource derive(ADFName = $ADFName,",
+						"          PipeLineName = $PipeLineName,",
+						"          RunId = $RunID,",
+						"          Status = $Status,",
+						"          TriggerName = $TriggerName) ~> ParametersValue",
+						"ParametersValue select(mapColumn(",
+						"          ADFName,",
+						"          PipeLineName,",
+						"          RunId,",
+						"          Status,",
+						"          TriggerName",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RemoveDummyColumn",
+						"RemoveDummyColumn sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:[($logFileName)],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> ADFLogFile"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_dummy')]",
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_Log')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_Log')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "ADFLogging",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF LogADF_append')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_dummy",
+								"type": "DatasetReference"
+							},
+							"name": "DummySource"
+						},
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_logfile",
+								"type": "DatasetReference"
+							},
+							"name": "logfile"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ADLS_Log",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ParametersValue"
+						},
+						{
+							"name": "RemoveDummyColumn"
+						},
+						{
+							"name": "union"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     ADFName as string,",
+						"     PipeLineName as string,",
+						"     RunID as string,",
+						"     Status as string,",
+						"     TriggerName as string,",
+						"     logFileName as string",
+						"}",
+						"source(output(",
+						"          Column_1 as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> DummySource",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($logFileName)]) ~> logfile",
+						"DummySource derive(ADFName = $ADFName,",
+						"          PipeLineName = $PipeLineName,",
+						"          RunId = $RunID,",
+						"          Status = $Status,",
+						"          TriggerName = $TriggerName) ~> ParametersValue",
+						"ParametersValue select(mapColumn(",
+						"          ADFName,",
+						"          PipeLineName,",
+						"          RunId,",
+						"          Status,",
+						"          TriggerName",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RemoveDummyColumn",
+						"RemoveDummyColumn, logfile union(byName: true)~> union",
+						"union sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     partitionFileNames:[($logFileName)],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_dummy')]",
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_logfile')]",
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_Log')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/az_ADLS_logfile')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Az_ADLS_maleeha",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"logfileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().logfileName",
+							"type": "Expression"
+						},
+						"folderPath": "ADFLogging",
+						"fileSystem": "adfcontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Az_ADLS_maleeha')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Execute ADFLogs')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Set FileName",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Wait1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "LogFileName",
+							"value": {
+								"value": "@concat(formatDateTime(utcnow(),'yyyy-MM-dd'),'_log.csv')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Set FileName",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "az_ADLS_logfile",
+								"type": "DatasetReference",
+								"parameters": {
+									"logfileName": {
+										"value": "@variables('LogFileName')",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"exists"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Check whether file exists or not",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Skipped"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@activity('Get Metadata').output.exists",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "DF LogADF",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF LogADF",
+											"type": "DataFlowReference",
+											"parameters": {
+												"ADFName": {
+													"value": "'@{pipeline().DataFactory}'",
+													"type": "Expression"
+												},
+												"PipeLineName": {
+													"value": "'@{pipeline().Pipeline}'",
+													"type": "Expression"
+												},
+												"RunID": {
+													"value": "'@{pipeline().RunId}'",
+													"type": "Expression"
+												},
+												"Status": {
+													"value": "'@{string('Success')}'",
+													"type": "Expression"
+												},
+												"TriggerName": {
+													"value": "'@{pipeline().TriggerName}'",
+													"type": "Expression"
+												},
+												"logFileName": {
+													"value": "'@{variables('LogFileName')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"DummySource": {},
+												"ADFLogFile": {}
+											},
+											"linkedServiceParameters": {}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "DF LogADF_append",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DF LogADF_append",
+											"type": "DataFlowReference",
+											"parameters": {
+												"ADFName": {
+													"value": "'@{pipeline().DataFactory}'",
+													"type": "Expression"
+												},
+												"PipeLineName": {
+													"value": "'@{pipeline().Pipeline}'",
+													"type": "Expression"
+												},
+												"RunID": {
+													"value": "'@{pipeline().RunId}'",
+													"type": "Expression"
+												},
+												"Status": {
+													"value": "'@{string('Success')}'",
+													"type": "Expression"
+												},
+												"TriggerName": {
+													"value": "'@{pipeline().TriggerName}'",
+													"type": "Expression"
+												},
+												"logFileName": {
+													"value": "'@{variables('LogFileName')}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"DummySource": {},
+												"logfile": {
+													"logfileName": {
+														"value": "@variables('LogFileName')",
+														"type": "Expression"
+													}
+												},
+												"sink1": {}
+											},
+											"linkedServiceParameters": {}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 3
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"LogFileName": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/az_ADLS_logfile')]",
+				"[concat(variables('factoryId'), '/dataflows/DF LogADF_append')]",
+				"[concat(variables('factoryId'), '/dataflows/DF LogADF')]"
+			]
 		}
 	]
 }
