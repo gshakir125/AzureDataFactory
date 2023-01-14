@@ -237,6 +237,70 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "sp_LogAzureDataFactoryExecution",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "ForEach1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[sp_LogAzureDataFactoryExecution]",
+							"storedProcedureParameters": {
+								"ADFName": {
+									"value": {
+										"value": "@pipeline().DataFactory",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineName": {
+									"value": {
+										"value": "@pipeline().Pipeline",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"pipelineRunID": {
+									"value": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"triggerName": {
+									"value": {
+										"value": "@pipeline().TriggerName",
+										"type": "Expression"
+									},
+									"type": "String"
+								},
+								"triggerTime": {
+									"value": {
+										"value": "@pipeline().TriggerTime",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "adfdbLS",
+							"type": "LinkedServiceReference"
+						}
 					}
 				],
 				"policy": {
@@ -1173,13 +1237,13 @@
 						"frequency": "Day",
 						"interval": 1,
 						"startTime": "2023-01-14T03:33:00",
-						"timeZone": "UTC-11",
+						"timeZone": "Pakistan Standard Time",
 						"schedule": {
 							"minutes": [
-								50
+								1
 							],
 							"hours": [
-								3
+								9
 							]
 						}
 					}
