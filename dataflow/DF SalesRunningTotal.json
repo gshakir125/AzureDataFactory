@@ -1,0 +1,53 @@
+{
+	"name": "DF SalesRunningTotal",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_MaySales_IN",
+						"type": "DatasetReference"
+					},
+					"name": "MaySales"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_RunningTotal_OU",
+						"type": "DatasetReference"
+					},
+					"name": "SalesRunningTotal"
+				}
+			],
+			"transformations": [
+				{
+					"name": "CalculateRunningTotal"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SalesDate as string,",
+				"          SalesItem as string,",
+				"          Country as string,",
+				"          Quantity as long",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> MaySales",
+				"MaySales window(asc(SalesDate, true),",
+				"     RunningTotal = sum(toInteger(Quantity))) ~> CalculateRunningTotal",
+				"CalculateRunningTotal sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['SalesRunningTotal.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> SalesRunningTotal"
+			]
+		}
+	}
+}
