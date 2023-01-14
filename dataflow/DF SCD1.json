@@ -50,10 +50,13 @@
 				"     upsertable:true,",
 				"     keys:['ID'],",
 				"     format: 'table',",
+				"     preSQLs:['SET IDENTITY_INSERT dbo.DimEmployee ON'],",
+				"     postSQLs:['SET IDENTITY_INSERT dbo.DimEmployee OFF'],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
+				"          ID,",
 				"          FirstName,",
 				"          LastName",
 				"     )) ~> DimEmployee"
