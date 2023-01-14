@@ -64,7 +64,7 @@
 				"RemoveDup sort(asc(EmpID, true)) ~> Sorting",
 				"Sorting sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     partitionFileNames:['ConsolidatedEmployee,csv'],",
+				"     partitionFileNames:['ConsolidatedEmployee.csv'],",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
