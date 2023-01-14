@@ -62,7 +62,6 @@
 				"MergeEmp1andEmp2 aggregate(groupBy(EmpID),",
 				"     each(match(name!='EmpID'), $$ = first($$))) ~> RemoveDup",
 				"RemoveDup sort(asc(EmpID, false),",
-				"     partitionLevel: true,",
 				"     partitionBy('hash', 1)) ~> Sorting",
 				"Sorting sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
