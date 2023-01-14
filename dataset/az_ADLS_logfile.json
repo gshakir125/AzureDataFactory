@@ -1,0 +1,32 @@
+{
+	"name": "az_ADLS_logfile",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Az_ADLS_maleeha",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"logfileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().logfileName",
+					"type": "Expression"
+				},
+				"folderPath": "ADFLogging",
+				"fileSystem": "adfcontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
