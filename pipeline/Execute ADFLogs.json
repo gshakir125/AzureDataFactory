@@ -57,6 +57,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -83,113 +84,23 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "DF LogADF",
-							"type": "ExecuteDataFlow",
+							"name": "False",
+							"type": "Wait",
 							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
 							"userProperties": [],
 							"typeProperties": {
-								"dataflow": {
-									"referenceName": "DF LogADF",
-									"type": "DataFlowReference",
-									"parameters": {
-										"ADFName": {
-											"value": "'@{pipeline().DataFactory}'",
-											"type": "Expression"
-										},
-										"PipeLineName": {
-											"value": "'@{pipeline().Pipeline}'",
-											"type": "Expression"
-										},
-										"RunID": {
-											"value": "'@{pipeline().RunId}'",
-											"type": "Expression"
-										},
-										"Status": {
-											"value": "'@{string('Success')}'",
-											"type": "Expression"
-										},
-										"TriggerName": {
-											"value": "'@{pipeline().TriggerName}'",
-											"type": "Expression"
-										},
-										"logFileName": {
-											"value": "'@{variables('LogFileName')}'",
-											"type": "Expression"
-										}
-									}
-								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
-								},
-								"traceLevel": "Fine"
+								"waitTimeInSeconds": 1
 							}
 						}
 					],
 					"ifTrueActivities": [
 						{
-							"name": "DF LogADF_append",
-							"type": "ExecuteDataFlow",
+							"name": "True",
+							"type": "Wait",
 							"dependsOn": [],
-							"policy": {
-								"timeout": "0.12:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
 							"userProperties": [],
 							"typeProperties": {
-								"dataflow": {
-									"referenceName": "DF LogADF_append",
-									"type": "DataFlowReference",
-									"parameters": {
-										"ADFName": {
-											"value": "'@{pipeline().DataFactory}'",
-											"type": "Expression"
-										},
-										"PipeLineName": {
-											"value": "'@{pipeline().Pipeline}'",
-											"type": "Expression"
-										},
-										"RunID": {
-											"value": "'@{pipeline().RunId}'",
-											"type": "Expression"
-										},
-										"Status": {
-											"value": "'@{string('Success')}'",
-											"type": "Expression"
-										},
-										"TriggerName": {
-											"value": "'@{pipeline().TriggerName}'",
-											"type": "Expression"
-										},
-										"logFileName": {
-											"value": "'@{variables('LogFileName')}'",
-											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"logfile": {
-											"logfileName": {
-												"value": "@variables('LogFileName')",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								"compute": {
-									"coreCount": 8,
-									"computeType": "General"
-								},
-								"traceLevel": "Fine"
+								"waitTimeInSeconds": 1
 							}
 						}
 					]
