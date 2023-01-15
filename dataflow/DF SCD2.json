@@ -16,13 +16,6 @@
 						"referenceName": "az_SQL_DimEmployeeT2",
 						"type": "DatasetReference"
 					},
-					"name": "MaxKey"
-				},
-				{
-					"dataset": {
-						"referenceName": "az_SQL_DimEmployeeT2",
-						"type": "DatasetReference"
-					},
 					"name": "DimEmployeeT2"
 				}
 			],
@@ -39,24 +32,21 @@
 						"referenceName": "az_SQL_DimEmployeeT2",
 						"type": "DatasetReference"
 					},
-					"name": "Update"
+					"name": "InsertUpdatedRecords"
 				}
 			],
 			"transformations": [
 				{
-					"name": "RenameSourceColumns"
+					"name": "filter1"
 				},
 				{
-					"name": "CrossJoin"
-				},
-				{
-					"name": "join1"
-				},
-				{
-					"name": "split1"
+					"name": "lookup1"
 				},
 				{
 					"name": "select1"
+				},
+				{
+					"name": "split1"
 				},
 				{
 					"name": "derivedColumn1"
@@ -65,10 +55,25 @@
 					"name": "select2"
 				},
 				{
-					"name": "IsActive"
+					"name": "exists1"
 				},
 				{
-					"name": "alterRow1"
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "select3"
+				},
+				{
+					"name": "lookup2"
+				},
+				{
+					"name": "select4"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "derivedColumn4"
 				}
 			],
 			"scriptLines": [
@@ -82,14 +87,6 @@
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DimEmployee",
 				"source(output(",
-				"          MaxKey as integer",
-				"     ),",
-				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     query: 'Select max(EmployeeT2Key)  as MaxKey from dbo.DimEmployeeT2',",
-				"     format: 'query') ~> MaxKey",
-				"source(output(",
 				"          EmployeeT2Key as integer,",
 				"          EmpID as integer,",
 				"          FirstName as string,",
@@ -102,52 +99,83 @@
 				"     validateSchema: false,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
 				"     format: 'table') ~> DimEmployeeT2",
-				"DimEmployee select(mapColumn(",
+				"DimEmployee filter(!isNull(ID)) ~> filter1",
+				"filter1, DimEmployeeT2 lookup(ID == EmpID,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1 select(mapColumn(",
 				"          S_ID = ID,",
-				"          S_FirstName = FirstName,",
-				"          S_LastName = LastName",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> RenameSourceColumns",
-				"RenameSourceColumns, MaxKey join(1 ==1,",
-				"     joinType:'cross',",
-				"     matchType:'exact',",
-				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> CrossJoin",
-				"CrossJoin, DimEmployeeT2 join(S_ID == EmpID,",
-				"     joinType:'left',",
-				"     matchType:'exact',",
-				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> join1",
-				"join1 split(S_ID==EmpID && (S_FirstName!=FirstName ||S_LastName!=LastName),",
-				"     disjoint: false) ~> split1@(Matched, NonMatching)",
-				"split1@NonMatching select(mapColumn(",
-				"          S_ID,",
-				"          S_FirstName,",
-				"          S_LastName",
+				"          S_FirstName = DimEmployee@FirstName,",
+				"          S_LastName = DimEmployee@LastName,",
+				"          EmployeeT2Key,",
+				"          D_EmpID = EmpID,",
+				"          D_FirstName = DimEmployeeT2@FirstName,",
+				"          D_LastName = DimEmployeeT2@LastName,",
+				"          StartDate,",
+				"          EndDate,",
+				"          IsActive",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
-				"select1 derive(StartDate = currentTimestamp(),",
-				"          IsActive = 1) ~> derivedColumn1",
-				"split1@Matched select(mapColumn(",
+				"select1 split(isNull(IsActive),",
+				"     disjoint: false) ~> split1@(NewRows, ExistingRows)",
+				"split1@NewRows derive(IsActive = 1,",
+				"          StartDate = currentTimestamp()) ~> derivedColumn1",
+				"split1@ExistingRows select(mapColumn(",
 				"          S_ID,",
 				"          S_FirstName,",
 				"          S_LastName,",
-				"          MaxKey,",
 				"          EmployeeT2Key,",
-				"          EmpID,",
-				"          FirstName,",
-				"          LastName,",
+				"          D_EmpID,",
+				"          D_FirstName,",
+				"          D_LastName,",
 				"          StartDate,",
 				"          EndDate,",
 				"          IsActive",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select2",
-				"select2 derive(EndDate = currentTimestamp(),",
-				"          IsActive = 0) ~> IsActive",
-				"IsActive alterRow(updateIf(S_ID==EmpID && IsActive ==1 && (S_FirstName!=FirstName ||S_LastName!=LastName))) ~> alterRow1",
+				"select2, DimEmployeeT2 exists(S_ID == EmpID,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> exists1",
+				"exists1 derive(IsActive = 0,",
+				"          EndDate = currentTimestamp()) ~> derivedColumn3",
+				"derivedColumn3 select(mapColumn(",
+				"          S_ID,",
+				"          S_FirstName,",
+				"          S_LastName,",
+				"          EmployeeT2Key,",
+				"          D_EmpID,",
+				"          D_FirstName,",
+				"          D_LastName,",
+				"          StartDate,",
+				"          EndDate,",
+				"          IsActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select3",
+				"filter1, DimEmployeeT2 lookup(ID == EmpID,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup2",
+				"lookup2 select(mapColumn(",
+				"          ID,",
+				"          FirstName = DimEmployee@FirstName,",
+				"          LastName = DimEmployee@LastName,",
+				"          EmployeeT2Key,",
+				"          EmpID,",
+				"          D_FirstName = DimEmployeeT2@FirstName,",
+				"          D_LastName = DimEmployeeT2@LastName,",
+				"          StartDate,",
+				"          EndDate,",
+				"          IsActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select4",
+				"select4 filter(toInteger(ID)==toInteger(EmpID) && (FirstName!=D_FirstName || LastName!=D_LastName)) ~> filter2",
+				"filter2 derive(StartDate = currentTimestamp(),",
+				"          IsActive = 1) ~> derivedColumn4",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -157,7 +185,7 @@
 				"          LastName as string,",
 				"          StartDate as timestamp,",
 				"          EndDate as timestamp,",
-				"          IsActive as boolean",
+				"          IsActive as integer",
 				"     ),",
 				"     deletable:false,",
 				"     insertable:true,",
@@ -172,9 +200,10 @@
 				"          FirstName = S_FirstName,",
 				"          LastName = S_LastName,",
 				"          StartDate,",
+				"          EndDate,",
 				"          IsActive",
 				"     )) ~> InsertNew",
-				"alterRow1 sink(allowSchemaDrift: true,",
+				"derivedColumn4 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          EmployeeT2Key as integer,",
@@ -183,22 +212,16 @@
 				"          LastName as string,",
 				"          StartDate as timestamp,",
 				"          EndDate as timestamp,",
-				"          IsActive as boolean",
+				"          IsActive as integer",
 				"     ),",
 				"     deletable:false,",
-				"     insertable:false,",
-				"     updateable:true,",
+				"     insertable:true,",
+				"     updateable:false,",
 				"     upsertable:false,",
-				"     keys:['EmpID'],",
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          EndDate,",
-				"          IsActive,",
-				"          EmpID = S_ID",
-				"     )) ~> Update"
+				"     errorHandlingOption: 'stopOnFirstError') ~> InsertUpdatedRecords"
 			]
 		}
 	}
