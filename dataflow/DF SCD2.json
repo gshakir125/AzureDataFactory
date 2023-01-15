@@ -96,7 +96,7 @@
 				"          LastName as string,",
 				"          StartDate as timestamp,",
 				"          EndDate as timestamp,",
-				"          IsActive as boolean",
+				"          IsActive as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
