@@ -33,6 +33,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "InsertUpdatedRecords"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_SQL_DimEmployeeT2",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -74,6 +81,9 @@
 				},
 				{
 					"name": "derivedColumn4"
+				},
+				{
+					"name": "AlterRow1"
 				}
 			],
 			"scriptLines": [
@@ -173,9 +183,10 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select4",
-				"select4 filter(toInteger(ID)==toInteger(EmpID) && (FirstName!=D_FirstName || LastName!=D_LastName)) ~> filter2",
+				"select4 filter(toInteger(ID)==toInteger(EmpID) && IsActive==1 && (FirstName!=D_FirstName || LastName!=D_LastName)) ~> filter2",
 				"filter2 derive(StartDate = currentTimestamp(),",
 				"          IsActive = 1) ~> derivedColumn4",
+				"select3 alterRow(updateIf(toInteger(S_ID)==toInteger(D_EmpID) && IsActive == 1 && (S_FirstName!=D_FirstName || S_LastName!=D_LastName))) ~> AlterRow1",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -229,7 +240,32 @@
 				"          StartDate,",
 				"          EndDate,",
 				"          IsActive",
-				"     )) ~> InsertUpdatedRecords"
+				"     )) ~> InsertUpdatedRecords",
+				"AlterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmployeeT2Key as integer,",
+				"          EmpID as integer,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          IsActive as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['EmpID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          EndDate,",
+				"          IsActive,",
+				"          EmpID = D_EmpID",
+				"     )) ~> sink1"
 			]
 		}
 	}
