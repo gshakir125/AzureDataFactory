@@ -70,7 +70,13 @@
 							"inputs": [
 								{
 									"referenceName": "az_SQL_Dynamic_Table",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": {
+											"value": "@item().schema_name",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
