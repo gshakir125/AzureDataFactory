@@ -26,6 +26,23 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
+						"additionalColumns": [
+							{
+								"name": "PipeLineName",
+								"value": {
+									"value": "@pipeline().Pipeline",
+									"type": "Expression"
+								}
+							},
+							{
+								"name": "Dup_FirstName",
+								"value": "$$COLUMN:FirstName"
+							},
+							{
+								"name": "Static_Cloumn",
+								"value": "ABC"
+							}
+						],
 						"queryTimeout": "00:05:00",
 						"partitionOption": "None"
 					},
@@ -47,7 +64,6 @@
 							{
 								"source": {
 									"name": "ID",
-									"type": "Int32",
 									"physicalType": "int"
 								},
 								"sink": {
@@ -59,7 +75,6 @@
 							{
 								"source": {
 									"name": "FirstName",
-									"type": "String",
 									"physicalType": "varchar"
 								},
 								"sink": {
@@ -71,7 +86,6 @@
 							{
 								"source": {
 									"name": "LastName",
-									"type": "String",
 									"physicalType": "varchar"
 								},
 								"sink": {
