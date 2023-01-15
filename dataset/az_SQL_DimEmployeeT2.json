@@ -40,7 +40,8 @@
 			},
 			{
 				"name": "IsActive",
-				"type": "bit"
+				"type": "tinyint",
+				"precision": 3
 			}
 		],
 		"typeProperties": {
