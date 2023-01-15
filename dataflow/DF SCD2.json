@@ -25,14 +25,14 @@
 						"referenceName": "az_SQL_DimEmployeeT2",
 						"type": "DatasetReference"
 					},
-					"name": "InsertIntoDimEmpT2"
+					"name": "UpdateDimEmpT2"
 				},
 				{
 					"dataset": {
 						"referenceName": "az_SQL_DimEmployeeT2",
 						"type": "DatasetReference"
 					},
-					"name": "UpdateDimEmpT2"
+					"name": "InsertNewRows"
 				}
 			],
 			"transformations": [
@@ -56,6 +56,18 @@
 				},
 				{
 					"name": "UpdateIsActiveandEndDateForMatches"
+				},
+				{
+					"name": "lookupforInsert"
+				},
+				{
+					"name": "GetOnlyNewRows"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "alterRow1"
 				}
 			],
 			"scriptLines": [
@@ -113,33 +125,21 @@
 				"RemoveSourceTableColumn derive(D_EndDate = currentTimestamp(),",
 				"          D_IsActive = 0) ~> SetEndDateAndIsActive",
 				"SetEndDateAndIsActive alterRow(updateIf(1==1)) ~> UpdateIsActiveandEndDateForMatches",
-				"StartEndandIsActive sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     input(",
-				"          EmployeeT2Key as integer,",
-				"          EmpID as integer,",
-				"          FirstName as string,",
-				"          LastName as string,",
-				"          StartDate as timestamp,",
-				"          EndDate as timestamp,",
-				"          IsActive as boolean",
-				"     ),",
-				"     deletable:false,",
-				"     insertable:true,",
-				"     updateable:false,",
-				"     upsertable:false,",
-				"     format: 'table',",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     saveOrder: 2,",
-				"     errorHandlingOption: 'stopOnFirstError',",
-				"     mapColumn(",
-				"          EmpID = ID,",
+				"StartEndandIsActive, RenameT2Columns lookup(ID == D_EmpID,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupforInsert",
+				"lookupforInsert filter(isNull(D_EmpID)) ~> GetOnlyNewRows",
+				"GetOnlyNewRows select(mapColumn(",
+				"          ID,",
 				"          FirstName,",
 				"          LastName,",
 				"          StartDate,",
 				"          IsActive",
-				"     )) ~> InsertIntoDimEmpT2",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 alterRow(insertIf(1==1)) ~> alterRow1",
 				"UpdateIsActiveandEndDateForMatches sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -169,7 +169,27 @@
 				"          StartDate = D_StartDate,",
 				"          EndDate = D_EndDate,",
 				"          IsActive = D_IsActive",
-				"     )) ~> UpdateDimEmpT2"
+				"     )) ~> UpdateDimEmpT2",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmployeeT2Key as integer,",
+				"          EmpID as integer,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          IsActive as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['ID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> InsertNewRows"
 			]
 		}
 	}
