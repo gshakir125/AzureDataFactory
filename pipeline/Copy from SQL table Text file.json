@@ -64,6 +64,7 @@
 							{
 								"source": {
 									"name": "ID",
+									"type": "Int32",
 									"physicalType": "int"
 								},
 								"sink": {
@@ -75,6 +76,7 @@
 							{
 								"source": {
 									"name": "FirstName",
+									"type": "String",
 									"physicalType": "varchar"
 								},
 								"sink": {
@@ -86,10 +88,42 @@
 							{
 								"source": {
 									"name": "LastName",
+									"type": "String",
 									"physicalType": "varchar"
 								},
 								"sink": {
 									"name": "LastName",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "PipeLineName"
+								},
+								"sink": {
+									"name": "PipeLineName",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "Dup_FirstName",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Dup_FirstName",
+									"type": "String",
+									"physicalType": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "Static_Cloumn"
+								},
+								"sink": {
+									"name": "Static_Cloumn",
 									"type": "String",
 									"physicalType": "String"
 								}
