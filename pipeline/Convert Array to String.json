@@ -29,7 +29,8 @@
 					"dataset": {
 						"referenceName": "az_ADLS_emails",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": false
 				}
 			},
 			{
@@ -57,7 +58,10 @@
 						"type": "DatasetReference"
 					},
 					"fieldList": [
-						"itemName"
+						{
+							"value": "@activity('Lookup Emails').output",
+							"type": "Expression"
+						}
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
@@ -66,6 +70,61 @@
 					"formatSettings": {
 						"type": "DelimitedTextReadSettings"
 					}
+				}
+			},
+			{
+				"name": "ForEach Email",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup Emails').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Set tempEmails",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "temEmails",
+								"value": {
+									"value": "@concat(item().email,',',item().email)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Emails",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set tempEmails",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Emails",
+								"value": {
+									"value": "@variables('temEmails')",
+									"type": "Expression"
+								}
+							}
+						}
+					]
 				}
 			}
 		],
