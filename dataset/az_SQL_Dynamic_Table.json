@@ -1,0 +1,20 @@
+{
+	"name": "az_SQL_Dynamic_Table",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "adfdbLS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"schema": {
+				"type": "string"
+			},
+			"tablename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}
