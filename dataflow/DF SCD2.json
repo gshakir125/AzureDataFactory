@@ -25,7 +25,7 @@
 						"referenceName": "az_SQL_DimEmployeeT2",
 						"type": "DatasetReference"
 					},
-					"name": "DimEmployeeTSink"
+					"name": "InsertIntoDimEmpT2"
 				},
 				{
 					"dataset": {
@@ -131,6 +131,7 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
 				"          EmpID = ID,",
@@ -138,7 +139,7 @@
 				"          LastName,",
 				"          StartDate,",
 				"          IsActive",
-				"     )) ~> DimEmployeeTSink",
+				"     )) ~> InsertIntoDimEmpT2",
 				"UpdateIsActiveandEndDateForMatches sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
@@ -158,6 +159,7 @@
 				"     format: 'table',",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 1,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
 				"          EmployeeT2Key = D_EmployeeT2Key,",
