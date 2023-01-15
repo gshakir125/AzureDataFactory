@@ -26,7 +26,7 @@
 						"type": "AzureBlobFSReadSettings",
 						"recursive": true,
 						"modifiedDatetimeEnd": {
-							"value": "@adddays(utcNow(),-5)",
+							"value": "@adddays(utcNow(),-3)",
 							"type": "Expression"
 						},
 						"enablePartitionDiscovery": false
@@ -41,7 +41,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "GetFiles",
+						"activity": "Check the Count of Files",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -168,8 +168,63 @@
 					"referenceName": "adfdbLS",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "FileCount",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "GetFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "FileCount",
+					"value": {
+						"value": "@string(length(activity('GetFiles').output.childItems))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Check the Count of Files",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "FileCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(variables('FileCount'),'4')",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Wait True",
+							"type": "Wait",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"waitTimeInSeconds": 1
+							}
+						}
+					]
+				}
 			}
 		],
+		"variables": {
+			"FileCount": {
+				"type": "String"
+			}
+		},
 		"annotations": []
 	}
 }
