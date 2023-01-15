@@ -53,15 +53,39 @@
 					"isSequential": true,
 					"activities": [
 						{
-							"name": "Wait1",
-							"type": "Wait",
+							"name": "Append EmailArray",
+							"type": "AppendVariable",
 							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
-								"waitTimeInSeconds": 1
+								"variableName": "EmailArray",
+								"value": {
+									"value": "@item().email",
+									"type": "Expression"
+								}
 							}
 						}
 					]
+				}
+			},
+			{
+				"name": "Set EmailString",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach Email",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "EmailString",
+					"value": {
+						"value": "@join(variables('EmailArray'),',')",
+						"type": "Expression"
+					}
 				}
 			}
 		],
