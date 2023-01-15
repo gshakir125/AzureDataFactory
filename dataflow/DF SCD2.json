@@ -1,0 +1,174 @@
+{
+	"name": "DF SCD2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_SQL_DimEmployee",
+						"type": "DatasetReference"
+					},
+					"name": "DimEmployee"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_SQL_DimEmployeeT2",
+						"type": "DatasetReference"
+					},
+					"name": "DimEmployeeT2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_SQL_DimEmployeeT2",
+						"type": "DatasetReference"
+					},
+					"name": "DimEmployeeTSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "az_SQL_DimEmployeeT2",
+						"type": "DatasetReference"
+					},
+					"name": "UpdateDimEmpT2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "StartEndandIsActive"
+				},
+				{
+					"name": "RenameT2Columns"
+				},
+				{
+					"name": "LookupwithT2"
+				},
+				{
+					"name": "GetOnlyMatchingRows"
+				},
+				{
+					"name": "RemoveSourceTableColumn"
+				},
+				{
+					"name": "SetEndDateAndIsActive"
+				},
+				{
+					"name": "UpdateIsActiveandEndDateForMatches"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ID as integer,",
+				"          FirstName as string,",
+				"          LastName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimEmployee",
+				"source(output(",
+				"          EmployeeT2Key as integer,",
+				"          EmpID as integer,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> DimEmployeeT2",
+				"DimEmployee derive(StartDate = currentTimestamp(),",
+				"          IsActive = 1) ~> StartEndandIsActive",
+				"DimEmployeeT2 select(mapColumn(",
+				"          D_EmployeeT2Key = EmployeeT2Key,",
+				"          D_EmpID = EmpID,",
+				"          D_FirstName = FirstName,",
+				"          D_LastName = LastName,",
+				"          D_StartDate = StartDate,",
+				"          D_EndDate = EndDate,",
+				"          D_IsActive = IsActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RenameT2Columns",
+				"DimEmployee, RenameT2Columns lookup(ID == D_EmpID,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> LookupwithT2",
+				"LookupwithT2 filter(!isNull(D_EmpID)) ~> GetOnlyMatchingRows",
+				"GetOnlyMatchingRows select(mapColumn(",
+				"          D_EmployeeT2Key,",
+				"          D_EmpID,",
+				"          D_FirstName,",
+				"          D_LastName,",
+				"          D_StartDate,",
+				"          D_EndDate,",
+				"          D_IsActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RemoveSourceTableColumn",
+				"RemoveSourceTableColumn derive(D_EndDate = currentTimestamp(),",
+				"          D_IsActive = 0) ~> SetEndDateAndIsActive",
+				"SetEndDateAndIsActive alterRow(updateIf(1==1)) ~> UpdateIsActiveandEndDateForMatches",
+				"StartEndandIsActive sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmployeeT2Key as integer,",
+				"          EmpID as integer,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          IsActive as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          EmpID = ID,",
+				"          FirstName,",
+				"          LastName,",
+				"          StartDate,",
+				"          IsActive",
+				"     )) ~> DimEmployeeTSink",
+				"UpdateIsActiveandEndDateForMatches sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          EmployeeT2Key as integer,",
+				"          EmpID as integer,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          StartDate as timestamp,",
+				"          EndDate as timestamp,",
+				"          IsActive as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:true,",
+				"     upsertable:false,",
+				"     keys:['EmployeeT2Key'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          EmployeeT2Key = D_EmployeeT2Key,",
+				"          EmpID = D_EmpID,",
+				"          FirstName = D_FirstName,",
+				"          LastName = D_LastName,",
+				"          StartDate = D_StartDate,",
+				"          EndDate = D_EndDate,",
+				"          IsActive = D_IsActive",
+				"     )) ~> UpdateDimEmpT2"
+			]
+		}
+	}
+}
