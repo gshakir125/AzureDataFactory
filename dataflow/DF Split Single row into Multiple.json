@@ -30,6 +30,9 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     Headers as string[] (['EmpId','EmpName','EmpSkill'])",
+				"}",
 				"source(output(",
 				"          empid as string,",
 				"          empname as string,",
@@ -55,7 +58,7 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     header: (['EmpID','EmpName','EmpSkill']),",
+				"     header: ($Headers),",
 				"     partitionBy('hash', 1)) ~> EmpSkillsSplitted"
 			]
 		}
