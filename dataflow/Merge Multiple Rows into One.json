@@ -1,0 +1,61 @@
+{
+	"name": "Merge Multiple Rows into One",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_EmpSkills",
+						"type": "DatasetReference"
+					},
+					"name": "EmpSkills"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_EmpSkillOutput",
+						"type": "DatasetReference"
+					},
+					"name": "EmpSkillOutput"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          empid as string,",
+				"          empname as string,",
+				"          skill as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> EmpSkills",
+				"derivedColumn2 aggregate(groupBy(empid,",
+				"          empname),",
+				"     skill = collect(skill)) ~> aggregate1",
+				"aggregate1 derive(skill = replace(replace(replace(toString(skill),'[',''),']',''),'\"','')) ~> derivedColumn1",
+				"EmpSkills derive(empname = initCap(empname)) ~> derivedColumn2",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['EmpSkillOutput.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> EmpSkillOutput"
+			]
+		}
+	}
+}
