@@ -68,7 +68,7 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"FileName": {
-											"value": "@variables('FileName')",
+											"value": "@activity('AllFiles').output.itemName",
 											"type": "Expression"
 										}
 									}
