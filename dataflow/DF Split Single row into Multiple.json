@@ -55,7 +55,7 @@
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     header: (array('EmpID','EmpName','EmpSkill')),",
+				"     header: (['EmpID','EmpName','EmpSkill']),",
 				"     partitionBy('hash', 1)) ~> EmpSkillsSplitted"
 			]
 		}
