@@ -30,6 +30,9 @@
 				},
 				{
 					"name": "derivedColumn2"
+				},
+				{
+					"name": "sort1"
 				}
 			],
 			"scriptLines": [
@@ -46,7 +49,8 @@
 				"     skill = collect(skill)) ~> aggregate1",
 				"aggregate1 derive(skill = replace(replace(replace(toString(skill),'[',''),']',''),'\"','')) ~> derivedColumn1",
 				"EmpSkills derive(empname = initCap(empname)) ~> derivedColumn2",
-				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"derivedColumn1 sort(asc(empid, true)) ~> sort1",
+				"sort1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     partitionFileNames:['EmpSkillOutput.csv'],",
 				"     umask: 0022,",
