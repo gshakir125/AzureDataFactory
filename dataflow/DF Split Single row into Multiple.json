@@ -1,0 +1,63 @@
+{
+	"name": "DF Split Single row into Multiple",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_skillsoutput",
+						"type": "DatasetReference"
+					},
+					"name": "EmpSkill"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ADLS_EmpSkills_Splited",
+						"type": "DatasetReference"
+					},
+					"name": "EmpSkillsSplitted"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SplitSkills"
+				},
+				{
+					"name": "flatten1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          empid as string,",
+				"          empname as string,",
+				"          skill as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> EmpSkill",
+				"EmpSkill derive(skill = split(skill,',')) ~> SplitSkills",
+				"SplitSkills foldDown(unroll(skill),",
+				"     mapColumn(",
+				"          empid,",
+				"          empname,",
+				"          skill",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flatten1",
+				"flatten1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['EmpSkills_Splitted.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     header: (array('EmpID','EmpName','EmpSkill')),",
+				"     partitionBy('hash', 1)) ~> EmpSkillsSplitted"
+			]
+		}
+	}
+}
