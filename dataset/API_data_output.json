@@ -1,5 +1,5 @@
 {
-	"name": "API_data",
+	"name": "API_data_output",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "Az_ADLS_maleeha",
