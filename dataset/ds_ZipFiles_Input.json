@@ -1,0 +1,16 @@
+{
+	"name": "ds_ZipFiles_Input",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HttpZipFilesLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		}
+	}
+}
