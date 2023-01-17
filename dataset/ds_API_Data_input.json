@@ -1,0 +1,16 @@
+{
+	"name": "ds_API_Data_input",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HttpServerLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "HttpServerLocation"
+			}
+		}
+	}
+}
