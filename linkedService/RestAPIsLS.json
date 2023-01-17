@@ -1,0 +1,12 @@
+{
+	"name": "RestAPIsLS",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://file-examples-com.github.io/uploads/2017/02/file_example_XLSX_5000.xlsx",
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
