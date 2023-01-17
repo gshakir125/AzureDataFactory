@@ -1,10 +1,15 @@
 {
 	"name": "HttpServerLS",
 	"properties": {
+		"parameters": {
+			"APIURL": {
+				"type": "string"
+			}
+		},
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://github.com/bharathirajatut/sample-excel-dataset/blob/f7a1e6184e41613378fcf349bbb446c3a4959c90/airline.xls",
+			"url": "@{linkedService().APIURL}",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
