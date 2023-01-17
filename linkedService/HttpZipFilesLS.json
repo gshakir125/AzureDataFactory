@@ -1,0 +1,12 @@
+{
+	"name": "HttpZipFilesLS",
+	"properties": {
+		"annotations": [],
+		"type": "HttpServer",
+		"typeProperties": {
+			"url": "https://github.com/readmeio/import-samples/blob/master/import-sample-single-version.zip",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}
