@@ -1,0 +1,12 @@
+{
+	"name": "ds_APIData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestAPIsLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	}
+}
