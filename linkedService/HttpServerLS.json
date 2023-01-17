@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "HttpServer",
 		"typeProperties": {
-			"url": "https://file-examples-com.github.io/uploads/2017/02/file_example_XLSX_5000.xlsx",
+			"url": "https://github.com/finbourne/sample-excel/blob/5a8c88f80e0de79afd8d1e0902e5c50426c6b47a/LUSID%20Excel%20-%20Business%20Agility%20-%20Making%20Simple%20Changes%20Quickly%20&%20Easily.xlsx",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
