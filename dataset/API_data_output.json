@@ -12,9 +12,6 @@
 				"type": "AzureBlobFSLocation",
 				"folderPath": "Destination",
 				"fileSystem": "adfcontainer"
-			},
-			"compression": {
-				"type": "ZipDeflate"
 			}
 		}
 	}
