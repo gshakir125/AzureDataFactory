@@ -1,5 +1,5 @@
 {
-	"name": "dataflow1_copy1",
+	"name": "DF SCD2",
 	"properties": {
 		"type": "MappingDataFlow",
 		"typeProperties": {
