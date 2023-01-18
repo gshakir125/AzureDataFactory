@@ -146,7 +146,6 @@
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError',",
 				"     mapColumn(",
-				"          EmployeeT2Key,",
 				"          EmpID,",
 				"          FirstName,",
 				"          LastName,",
