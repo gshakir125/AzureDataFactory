@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					},
 					"formatSettings": {
@@ -79,6 +80,7 @@
 								],
 								"storeSettings": {
 									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
 									"enablePartitionDiscovery": false
 								},
 								"formatSettings": {
@@ -213,6 +215,19 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "RoundNumber",
+					"value": {
+						"value": "@string(div(float(split(string(mul(float(786.5678),100)),'.')[0]),100))",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"variables": {
@@ -222,6 +237,10 @@
 			"PreviousModifiedDate": {
 				"type": "String",
 				"defaultValue": "1990-01-01T05:12:22Z"
+			},
+			"RoundNumber": {
+				"type": "String",
+				"defaultValue": "345.7854"
 			}
 		},
 		"annotations": []
