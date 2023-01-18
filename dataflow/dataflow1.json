@@ -66,6 +66,9 @@
 				},
 				{
 					"name": "derivedColumn3"
+				},
+				{
+					"name": "filter1"
 				}
 			],
 			"scriptLines": [
@@ -121,8 +124,9 @@
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
 				"     broadcast: 'auto')~> join1",
-				"join1 derive(StartDate = currentTimestamp(),",
+				"filter1 derive(StartDate = currentTimestamp(),",
 				"          IsActive = 1) ~> derivedColumn3",
+				"join1 filter(dimemployee@FirstName!=T2@FirstName || dimemployee@LastName!=T2@LastName) ~> filter1",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
