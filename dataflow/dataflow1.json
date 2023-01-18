@@ -69,6 +69,9 @@
 				},
 				{
 					"name": "filter1"
+				},
+				{
+					"name": "filter2"
 				}
 			],
 			"scriptLines": [
@@ -112,13 +115,13 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> select1",
-				"select1 split(!isNull(S_ID) && isNull(D_EmpID),",
+				"select1 split(isNull(D_EmpID),",
 				"     disjoint: false) ~> split1@(NewRows, ExistingRows)",
 				"split1@NewRows derive(StartDate = currentTimestamp(),",
 				"          IsActive = 1) ~> derivedColumn1",
 				"split1@ExistingRows derive(EndDate = currentTimestamp(),",
 				"          IsActive = 0) ~> derivedColumn2",
-				"derivedColumn2 alterRow(updateIf(!isNull(D_EmpID))) ~> AlterRow1",
+				"filter2 alterRow(updateIf(IsActive == 1 && (S_FirstName!=D_FirstName || S_LastName != D_LastName))) ~> AlterRow1",
 				"dimemployee, T2 join(ID == EmpID,",
 				"     joinType:'inner',",
 				"     matchType:'exact',",
@@ -126,7 +129,8 @@
 				"     broadcast: 'auto')~> join1",
 				"filter1 derive(StartDate = currentTimestamp(),",
 				"          IsActive = 1) ~> derivedColumn3",
-				"join1 filter(dimemployee@FirstName!=T2@FirstName || dimemployee@LastName!=T2@LastName) ~> filter1",
+				"join1 filter(IsActive == 1 && (dimemployee@FirstName!=T2@FirstName || dimemployee@LastName!=T2@LastName)) ~> filter1",
+				"derivedColumn2 filter(IsActive==1 && (S_FirstName!=D_FirstName || S_LastName != D_LastName)) ~> filter2",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
