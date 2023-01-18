@@ -87,7 +87,7 @@
 				"T2 filter(IsActive==1) ~> GetActiveRecords",
 				"GetActiveRecords derive(DesHashColumn = md5(FirstName,LastName)) ~> DesHashColumn",
 				"dimemployee derive(HashInput = md5(FirstName,LastName)) ~> SourceHashColumns",
-				"SourceHashColumns, DesHashColumn exists(ID == EmpID,",
+				"SourceHashColumns, DesHashColumn exists(HashInput==DesHashColumn,",
 				"     negate:true,",
 				"     broadcast: 'auto')~> CheckforNewRecords",
 				"CheckforNewRecords derive(StartDate = currentTimestamp(),",
